@@ -32,6 +32,113 @@ var APROVADORES = {
 APROVADORES['Everton Seleme'].assin = 'data:image/png;base64,' + ASSIN;
 
 var isc = 0, occ = 1, autLogado = null;
+// ============================================================
+// GOOGLE SHEETS INTEGRATION
+// ============================================================
+var API_URL = "https://script.google.com/macros/s/AKfycbxqaGNCfvc-LnHfPV0ajFT5ULaWrm6lv6P3KnLsJLeF9Lqmg1uLTZi3GnhJ0vO08QJT/exec";
+
+function apiCall(action, params, cb) {
+  var obj = {action: action};
+  if (params) { for (var k in params) obj[k] = params[k]; }
+  var payload = encodeURIComponent(JSON.stringify(obj));
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", API_URL + "?payload=" + payload, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      try {
+        var r = JSON.parse(xhr.responseText);
+        if (cb) cb(r);
+      } catch(e) {
+        if (cb) cb({ok: false, msg: xhr.responseText});
+      }
+    }
+  };
+  xhr.onerror = function() { if (cb) cb({ok: false, msg: "Erro de conexao"}); };
+  xhr.send();
+}
+
+function carregarDados(cb) {
+  apiCall("listarSolicitacoes", {}, function(rS) {
+    if (rS.ok && rS.data && rS.data.length) {
+      DB.sols = rS.data.map(function(row) {
+        var itens = row["Itens"] || [];
+        if (typeof itens === "string") { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+        var status = (row["Status"] || "").toLowerCase();
+        var st = "done";
+        if (status === "pendente") st = "p";
+        else if (status === "autorizada" || status === "aprovada") st = "apr";
+        else if (status === "rejeitada") st = "rej";
+        return {
+          id: row["ID"] || "",
+          nome: row["Solicitante"] || "",
+          depto: row["Departamento"] || "",
+          obra: row["Obra"] || "",
+          etapa: row["Etapa"] || "",
+          forn: row["Fornecedor Sugerido"] || "",
+          datN: row["Data Necessaria"] || "",
+          just: row["Justificativa"] || "",
+          itens: itens, st: st,
+          datS: row["Data"] || "",
+          aprovadoPor: row["Autorizado Por"] || "",
+          dataApr: row["Data Autorizacao"] || "",
+          obsApr: row["Obs Autorizacao"] || ""
+        };
+      });
+    }
+    apiCall("listarOCs", {}, function(rO) {
+      if (rO.ok && rO.data && rO.data.length) {
+        DB.ords = rO.data.map(function(row) {
+          var itens = row["Itens"] || [];
+          if (typeof itens === "string") { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+          return {
+            num: row["Numero OC"] || "",
+            nraw: (row["Numero OC"] || "").replace("OC-",""),
+            sid: row["Ref Solicitacao"] || "",
+            sol: row["Solicitante"] || "",
+            depto: row["Departamento"] || "",
+            obra: row["Obra"] || "",
+            etapa: row["Etapa"] || "",
+            fnome: row["Fornecedor"] || "",
+            en: row["Empresa Faturamento"] || "",
+            ec: row["CNPJ Empresa"] || "",
+            pg: row["Forma Pagamento"] || "",
+            pz: row["Prazo Pagamento"] || "",
+            bn: row["Banco"] || "",
+            ag: row["Agencia"] || "",
+            tp: row["Tipo"] || "",
+            ct: row["Conta"] || "",
+            itens: itens,
+            total: parseFloat(row["Total"] || 0) || 0,
+            just: row["Justificativa"] || "",
+            aprovadoPor: row["Autorizado Por"] || "",
+            dataApr: row["Data Autorizacao"] || "",
+            dataE: row["Data Emissao"] || "",
+            forn: null, assinImg: ""
+          };
+        });
+        occ = DB.ords.length + 1;
+      }
+      upBadges();
+      if (cb) cb();
+    });
+  });
+}
+
+function syncAtualizar() {
+  carregarDados(function() {
+    var at = document.querySelector(".tab.active");
+    if (at) {
+      var t = at.id.replace("tab-","");
+      if (t === "cmp") rCmp();
+      if (t === "ord") rOrd();
+      if (t === "apr" && autLogado) rApr();
+    }
+  });
+}
+
+// Auto-refresh a cada 30 segundos
+setInterval(syncAtualizar, 30000);
+
 
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', function() {
@@ -39,6 +146,11 @@ document.addEventListener('DOMContentLoaded', function() {
   addI();
   setupListeners();
   rF(); rO(); rD(); rE();
+  carregarDados(function() {
+    var at = document.querySelector('.tab.active');
+    if (at && at.id === 'tab-cmp') rCmp();
+    if (at && at.id === 'tab-ord') rOrd();
+  });
 });
 
 function setupListeners() {
@@ -70,9 +182,11 @@ function sw(t) {
     document.getElementById('tab-'+x).classList.toggle('active', x===t);
     document.getElementById('sec-'+x).classList.toggle('active', x===t);
   });
-  if (t==='apr' && autLogado) rApr();
-  if (t==='cmp') rCmp();
-  if (t==='ord') rOrd();
+  carregarDados(function() {
+    if (t==='apr' && autLogado) rApr();
+    if (t==='cmp') rCmp();
+    if (t==='ord') rOrd();
+  });
   if (t==='cad') { rF(); rO(); rD(); rE(); }
 }
 
@@ -201,8 +315,20 @@ function envS() {
     itens:itens, st:'p',
     datS: new Date().toLocaleDateString('pt-BR')
   };
-  DB.sols.push(sol);
-  toast('t-ok'); upBadges(); limS();
+  var btn = document.getElementById('btnEnv');
+  btn.textContent = 'Enviando...'; btn.disabled = true;
+  apiCall("salvarSolicitacao", {data: sol}, function(res) {
+    if (res.ok) {
+      sol.id = res.id;
+      DB.sols.push(sol);
+      toast('t-ok'); upBadges(); limS();
+    } else {
+      // Salva local se falhar
+      DB.sols.push(sol);
+      toast('t-ok'); upBadges(); limS();
+    }
+    btn.textContent = 'Enviar solicitacao →'; btn.disabled = false;
+  });
 }
 
 // ---- APROVACAO ----
@@ -273,6 +399,7 @@ function aprS(sid) {
   var s = DB.sols.find(function(x){ return x.id===sid; }); if (!s) return;
   var obs = (document.getElementById('obs-'+sid)||{}).value||'';
   s.st='apr'; s.aprovadoPor=autLogado; s.dataApr=new Date().toLocaleString('pt-BR'); s.obsApr=obs;
+  apiCall("atualizarStatus", {id:s.id, status:"Autorizada", autorizadoPor:autLogado, dataAutorizacao:s.dataApr, obsAutorizacao:obs}, function(){});
   toast('t-ok'); upBadges(); rApr();
 }
 
@@ -281,6 +408,7 @@ function rejS(sid) {
   var s = DB.sols.find(function(x){ return x.id===sid; }); if (!s) return;
   var obs = (document.getElementById('obs-'+sid)||{}).value||'';
   s.st='rej'; s.aprovadoPor=autLogado; s.dataApr=new Date().toLocaleString('pt-BR'); s.obsApr=obs;
+  apiCall("atualizarStatus", {id:s.id, status:"Rejeitada", autorizadoPor:autLogado, dataAutorizacao:s.dataApr, obsAutorizacao:obs}, function(){});
   toast('t-rej'); upBadges(); rApr();
 }
 
@@ -521,6 +649,8 @@ function gOC(sid) {
     dataE:new Date().toLocaleDateString('pt-BR')
   };
   s.st='done'; DB.ords.push(oc);
+  apiCall("atualizarStatus", {id:s.id, status:"OC Gerada", autorizadoPor:s.aprovadoPor||"", dataAutorizacao:s.dataApr||"", obsAutorizacao:""}, function(){});
+  apiCall("salvarOC", {data:oc}, function(){});
   toast('t-oc'); upBadges(); rCmp();
 }
 
