@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sistema de Compras - Seleme Engenharia</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--sur:#fff;--sur2:#f0efe9;--brd:#e0ddd5;
+  --tx:#1a1a18;--tx2:#6b6a64;--tx3:#9b9a93;
+  --navy:#1a3a6e;--green:#16a34a;--red:#dc2626;--amber:#d97706;
+  --green-bg:#f0fdf4;--green-bd:#bbf7d0;--green-tx:#15803d;
+  --blue-bg:#eff4ff;--blue-bd:#bfcffa;--blue-tx:#1d4ed8;
+  --amber-bg:#fffbeb;--amber-bd:#fde68a;--amber-tx:#b45309;
+  --red-bg:#fef2f2;--red-bd:#fecaca;--red-tx:#b91c1c;
+  --r:10px;--rs:6px;--sh:0 1px 3px rgba(0,0,0,.07);
+}
+body{font-family:Arial,sans-serif;font-size:14px;background:var(--bg);color:var(--tx);min-height:100vh}
+header{background:var(--sur);border-bottom:1px solid var(--brd);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:20;box-shadow:var(--sh)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--navy)}
+.con{max-width:1020px;margin:0 auto;padding:1.5rem}
+.tabs{display:flex;gap:3px;background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:4px;margin-bottom:1.25rem;box-shadow:var(--sh);flex-wrap:wrap}
+.tab{flex:1;min-width:110px;padding:7px 10px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);background:transparent;transition:all .15s}
+.tab:hover{background:var(--sur2)}.tab.active{background:var(--navy);color:#fff}
+.tab .bc{background:var(--amber);color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px;margin-left:4px;display:none}
+.tab.active .bc{background:rgba(255,255,255,.3)}
+.sec{display:none}.sec.active{display:block}
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--sh)}
+.ctit{font-size:14px;font-weight:700;margin-bottom:1rem;color:var(--navy)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg1{grid-template-columns:1fr}.fg3{grid-template-columns:2fr 1fr 1fr}
+.fi{display:flex;flex-direction:column;gap:4px}
+label{font-size:11px;font-weight:600;color:var(--tx2)}
+input,select,textarea{padding:7px 10px;border:1px solid var(--brd);border-radius:var(--rs);font-size:13px;font-family:Arial,sans-serif;color:var(--tx);background:var(--sur);width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+textarea{min-height:60px;resize:vertical}
+hr.dv{border:none;border-top:1px solid var(--brd);margin:1rem 0}
+.btn{padding:7px 14px;border-radius:var(--rs);border:1px solid var(--brd);cursor:pointer;font-size:12px;font-weight:600;background:var(--sur);color:var(--tx);display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn:hover{background:var(--sur2)}.btn:active{transform:scale(.98)}
+.bp{background:var(--navy);color:#fff;border-color:var(--navy)}.bp:hover{background:#122d55}
+.bg{background:var(--green);color:#fff;border-color:var(--green)}.bg:hover{opacity:.9}
+.br{color:var(--red);border-color:var(--red-bd)}.br:hover{background:var(--red-bg)}
+.bsm{padding:4px 9px;font-size:11px}
+.act{display:flex;justify-content:flex-end;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--brd)}
+.em{text-align:center;padding:2rem;color:var(--tx3);font-size:13px}
+.sc{border:1px solid var(--brd);border-radius:var(--r);padding:1rem;margin-bottom:10px;background:var(--sur)}
+.sid{font-family:monospace;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.sif{font-size:11px;color:var(--tx2);line-height:1.7}
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}
+.bp2{background:var(--amber-bg);color:var(--amber-tx);border:1px solid var(--amber-bd)}
+.bg2{background:var(--green-bg);color:var(--green-tx);border:1px solid var(--green-bd)}
+.bb2{background:var(--blue-bg);color:var(--blue-tx);border:1px solid var(--blue-bd)}
+.br2{background:var(--red-bg);color:var(--red-tx);border:1px solid var(--red-bd)}
+.acw{position:relative}
+.acl{position:absolute;top:100%;left:0;right:0;background:var(--sur);border:1px solid var(--brd);border-radius:var(--rs);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;max-height:220px;overflow-y:auto;display:none}
+.aci{padding:7px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--brd)}
+.aci:hover{background:var(--sur2)}
+.aci b{display:block;font-size:13px;color:var(--tx)}
+.aci span{color:var(--tx3);font-size:11px}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.mb{background:var(--sur);border-radius:var(--r);padding:1.5rem;width:90%;max-width:640px;max-height:90vh;overflow-y:auto}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;border-radius:var(--r);font-size:12px;font-weight:600;display:none;z-index:300;color:#fff}
+.tg{background:var(--green)}.tn{background:var(--navy)}.tr{background:var(--red)}
+table.ti{width:100%;border-collapse:collapse;margin-bottom:8px}
+table.ti th{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;padding:5px 6px;background:var(--sur2);border-bottom:1px solid var(--brd);text-align:left}
+table.ti td{padding:4px;border-bottom:1px solid var(--brd);vertical-align:middle}
+table.lt{width:100%;border-collapse:collapse;font-size:12px}
+table.lt th{padding:6px 8px;background:var(--sur2);border-bottom:1px solid var(--brd);font-size:11px;font-weight:700;color:var(--tx3);text-align:left;text-transform:uppercase}
+table.lt td{padding:5px 8px;border-bottom:1px solid var(--brd)}
+table.lt tr:hover td{background:var(--sur2)}
+.stabs{display:flex;gap:3px;margin-bottom:1rem;flex-wrap:wrap}
+.stab{padding:5px 12px;border:1px solid var(--brd);border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx2);background:var(--sur)}
+.stab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ss{display:none}.ss.active{display:block}
+.cf{background:var(--sur2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px;margin-top:8px}
+@media(max-width:600px){.fg,.fg3{grid-template-columns:1fr}.con{padding:1rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+    Seleme Engenharia &mdash; Sistema de Compras
+  </div>
+</header>
+
+<div class="toast tg" id="t-ok">Salvo!</div>
+<div class="toast tn" id="t-oc">Ordem de compra gerada!</div>
+<div class="toast tr" id="t-rej">Rejeitada!</div>
+
+<div class="con">
+  <div class="tabs">
+    <button class="tab active" onclick="sw('sol')" id="tab-sol">Solicitante</button>
+    <button class="tab" onclick="sw('apr')" id="tab-apr">Aprovacao <span class="bc" id="bc-apr">0</span></button>
+    <button class="tab" onclick="sw('cmp')" id="tab-cmp">Comprador <span class="bc" id="bc-cmp">0</span></button>
+    <button class="tab" onclick="sw('ord')" id="tab-ord">Ordens <span class="bc" id="bc-ord">0</span></button>
+    <button class="tab" onclick="sw('cad')" id="tab-cad">Cadastros</button>
+  </div>
+
+  <div id="sec-sol" class="sec active">
+    <div class="card">
+      <div class="ctit">Nova Solicitacao de Compra</div>
+      <div class="fg">
+        <div class="fi"><label>Solicitante *</label><input id="sn" placeholder="Seu nome completo"/></div>
+        <div class="fi"><label>Departamento *</label><select id="sd"><option value="">Selecione...</option><option>Administrativo</option><option>TI</option><option>Operacoes</option><option>RH</option><option>Financeiro</option><option>Comercial</option><option>Producao</option><option>Logistica</option><option>Engenharia</option><option>Compras</option></select></div>
+      </div>
+      <div class="fg">
+        <div class="fi"><label>Obra</label><select id="so"><option value="">Selecione...</option><option value="001">001 - Seleme Engenharia</option><option value="011">011 - Figueroa e Cassol Imoveis</option><option value="223">223 - Usifarma S. Filho</option></select></div>
+        <div class="fi"><label>Etapa / Veiculo</label><input id="se" placeholder="Ex: 412 MLK8D89"/></div>
+      </div>
+      <div class="fg">
+        <div class="fi"><label>Fornecedor sugerido</label><input id="sf" placeholder="Opcional"/></div>
+        <div class="fi"><label>Data necessaria</label><input type="date" id="sdt"/></div>
+      </div>
+      <div class="fg fg1"><div class="fi"><label>Justificativa</label><textarea id="sj" placeholder="Motivo da compra..."></textarea></div></div>
+      <hr class="dv"/>
+      <div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;margin-bottom:8px">Itens Solicitados</div>
+      <table class="ti">
+        <thead><tr><th style="width:8%">Qtde</th><th style="width:9%">Unid</th><th style="width:47%">Produto</th><th style="width:26%">CC</th><th style="width:10%"></th></tr></thead>
+        <tbody id="ibs"></tbody>
+      </table>
+      <button class="btn bsm" id="btnAddI">+ Item</button>
+      <div class="act">
+        <button class="btn" id="btnLim">Limpar</button>
+        <button class="btn bp" id="btnEnv">Enviar solicitacao &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sec-apr" class="sec">
+    <div class="card" id="apr-login">
+      <div class="ctit">Acesso do Aprovador</div>
+      <div style="max-width:340px;margin:0 auto">
+        <div class="fi" style="margin-bottom:12px"><label>Aprovador</label>
+          <select id="apr-user"><option value="">Selecione...</option><option>Everton Seleme</option><option>Ruth Mariana</option><option>Gabriel Simao</option><option>Jessica</option></select>
+        </div>
+        <div class="fi" style="margin-bottom:14px"><label>Senha</label><input type="password" id="apr-pw"/></div>
+        <button class="btn bp" style="width:100%;justify-content:center" id="btnLoginApr">Entrar</button>
+        <div id="apr-err" style="display:none;margin-top:10px;background:var(--red-bg);color:var(--red-tx);border:1px solid var(--red-bd);border-radius:var(--rs);padding:8px;font-size:12px">Usuario ou senha incorretos.</div>
+      </div>
+    </div>
+    <div id="apr-painel" style="display:none">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1.25rem">
+        <div><div style="font-weight:700">Painel de Aprovacao</div>
+          <div style="font-size:12px;color:var(--tx2)">Logado: <strong id="apr-nome" style="color:var(--navy)"></strong></div></div>
+        <button class="btn bsm br" id="btnLogoutApr">Sair</button>
+      </div>
+      <div class="card"><div class="ctit">Solicitacoes pendentes</div><div id="lista-apr"><div class="em">Nenhuma pendente.</div></div></div>
+    </div>
+  </div>
+
+  <div id="sec-cmp" class="sec">
+    <div class="card"><div class="ctit">Solicitacoes aprovadas</div><div id="lista-cmp"><div class="em">Nenhuma aprovada.</div></div></div>
+  </div>
+
+  <div id="sec-ord" class="sec">
+    <div class="card"><div class="ctit">Ordens de Compra</div><div id="lista-ord"><div class="em">Nenhuma ordem gerada.</div></div></div>
+  </div>
+
+  <div id="sec-cad" class="sec">
+    <div class="card">
+      <div class="ctit">Cadastros</div>
+      <div class="stabs">
+        <button class="stab active" onclick="sst('forn')">Fornecedores</button>
+        <button class="stab" onclick="sst('obras')">Obras</button>
+        <button class="stab" onclick="sst('deptos')">Departamentos</button>
+        <button class="stab" onclick="sst('emp')">Empresas</button>
+        <button class="stab" onclick="sst('senhas')">Senhas</button>
+      </div>
+      <div id="ss-forn" class="ss active">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px">
+          <input id="filtForn" placeholder="Buscar fornecedor..." style="max-width:280px"/>
+          <button class="btn bp bsm" id="btnNovoForn">+ Novo</button>
+        </div>
+        <div style="overflow-x:auto"><table class="lt"><thead><tr><th>Fantasia</th><th>Razao Social</th><th>CNPJ/CPF</th><th>Cidade</th><th>Telefone</th><th></th></tr></thead><tbody id="tbF"></tbody></table></div>
+      </div>
+      <div id="ss-obras" class="ss">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--tx2)">Obras cadastradas</span>
+          <button class="btn bp bsm" id="btnNovaObra">+ Nova</button>
+        </div>
+        <table class="lt"><thead><tr><th>Codigo</th><th>Descricao</th><th>Destinatario NF</th><th></th></tr></thead><tbody id="tbO"></tbody></table>
+      </div>
+      <div id="ss-deptos" class="ss">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--tx2)">Departamentos</span>
+          <button class="btn bp bsm" id="btnNovoDepto">+ Novo</button>
+        </div>
+        <table class="lt"><thead><tr><th>Departamento</th><th></th></tr></thead><tbody id="tbD"></tbody></table>
+      </div>
+      <div id="ss-emp" class="ss">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--tx2)">Empresas faturamento</span>
+          <button class="btn bp bsm" id="btnNovaEmp">+ Nova</button>
+        </div>
+        <table class="lt"><thead><tr><th>Nome</th><th>CNPJ</th><th>IE</th><th>Email NF-e</th><th></th></tr></thead><tbody id="tbE"></tbody></table>
+      </div>
+      <div id="ss-senhas" class="ss">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Alterar senhas dos aprovadores.</div>
+        <table class="lt"><thead><tr><th>Aprovador</th><th>Nova Senha</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Everton Seleme</td><td><input type="password" id="pw0" style="width:160px"/></td><td><button class="btn bsm bp" data-nome="Everton Seleme" data-pw="pw0" class="btnSvPw">Salvar</button></td></tr>
+          <tr><td>Ruth Mariana</td><td><input type="password" id="pw1" style="width:160px"/></td><td><button class="btn bsm bp" data-nome="Ruth Mariana" data-pw="pw1" class="btnSvPw">Salvar</button></td></tr>
+          <tr><td>Gabriel Simao</td><td><input type="password" id="pw2" style="width:160px"/></td><td><button class="btn bsm bp" data-nome="Gabriel Simao" data-pw="pw2" class="btnSvPw">Salvar</button></td></tr>
+          <tr><td>Jessica</td><td><input type="password" id="pw3" style="width:160px"/></td><td><button class="btn bsm bp" data-nome="Jessica" data-pw="pw3" class="btnSvPw">Salvar</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mo" class="mo">
+  <div class="mb">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span id="mt" style="font-size:15px;font-weight:700"></span>
+      <button id="btnCm" style="border:none;background:none;cursor:pointer;font-size:20px;color:var(--tx2)">&times;</button>
+    </div>
+    <div id="mb2"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
